@@ -28,22 +28,22 @@ from sklearn.datasets import load_boston
 boston = load_boston()
 
 boston_features = pd.DataFrame(boston.data, columns = boston.feature_names)
-b = boston_features["B"]
-logdis = np.log(boston_features["DIS"])
-loglstat = np.log(boston_features["LSTAT"])
+b = boston_features['B']
+logdis = np.log(boston_features['DIS'])
+loglstat = np.log(boston_features['LSTAT'])
 
 # minmax scaling
-boston_features["B"] = (b-min(b))/(max(b)-min(b))
-boston_features["DIS"] = (logdis-min(logdis))/(max(logdis)-min(logdis))
+boston_features['B'] = (b-min(b))/(max(b)-min(b))
+boston_features['DIS'] = (logdis-min(logdis))/(max(logdis)-min(logdis))
 
 #standardization
-boston_features["LSTAT"] = (loglstat-np.mean(loglstat))/np.sqrt(np.var(loglstat))
+boston_features['LSTAT'] = (loglstat-np.mean(loglstat))/np.sqrt(np.var(loglstat))
 ```
 
 
 ```python
 X = boston_features[['CHAS', 'RM', 'DIS', 'B', 'LSTAT']]
-y = pd.DataFrame(boston.target,columns = ['target'])
+y = pd.DataFrame(boston.target, columns = ['target'])
 type(X)
 ```
 
@@ -54,9 +54,9 @@ type(X)
 
 
 
-## Train test split
+### Train-test split
 
-Perform a train-test-split with a test set of 0.20.
+Perform a train-test split with a test set of 20%.
 
 
 ```python
@@ -65,19 +65,21 @@ from sklearn.model_selection import train_test_split
 
 
 ```python
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
 ```
 
 
 ```python
-#A brief preview of our train test split
+# A brief preview of train-test split
 print(len(X_train), len(X_test), len(y_train), len(y_test))
 ```
 
     404 102 404 102
 
 
-Fit the model and apply the model to the make test set predictions
+### Fit the model
+
+Fit a linear regression model and apply the model to make predictions on test set
 
 
 ```python
@@ -88,7 +90,9 @@ linreg.fit(X_train, y_train)
 y_hat_test = linreg.predict(X_test)
 ```
 
-Calculate the residuals and the mean squared error
+### Residuals and MSE
+
+Calculate the residuals and the mean squared error on the test set
 
 
 ```python
@@ -110,15 +114,14 @@ test_mse
 
 ### Create a cross-validation function
 
-Write a function k-folds that splits a dataset into k evenly sized pieces.
-If the full dataset is not divisible by k, make the first few folds one larger then later ones.
+Write a function `kfolds()` that splits a dataset into k evenly sized pieces. If the full dataset is not divisible by k, make the first few folds one larger then later ones.
 
 We want the folds to be a list of subsets of data!
 
 
 ```python
 def kfolds(data, k):
-    #Force data as pandas dataframe
+    # Force data as pandas DataFrame
     data = pd.DataFrame(data)
     num_observations = len(data)
     fold_size = num_observations//k
@@ -139,7 +142,7 @@ def kfolds(data, k):
     return folds 
 ```
 
-### Apply it to the Boston Housing Data
+### Apply it to the Boston Housing data
 
 
 ```python
@@ -151,9 +154,9 @@ bos_data = pd.concat([X.reset_index(drop=True), y], axis=1)
 bos_folds = kfolds(bos_data, 5)
 ```
 
-### Perform a linear regression for each fold, and calculate the training and test error
+### Perform a linear regression for each fold and calculate the training and test error
 
-Perform linear regression on each and calculate the training and test error.
+Perform linear regression on each and calculate the training and test error: 
 
 
 ```python
@@ -201,10 +204,10 @@ This was a bit of work! Now, let's perform 5-fold cross-validation to get the me
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
 
-cv_5_results = cross_val_score(linreg, X, y, cv=5, scoring="neg_mean_squared_error")
+cv_5_results = cross_val_score(linreg, X, y, cv=5, scoring='neg_mean_squared_error')
 ```
 
-Next, calculate the mean of the MSE over the 5 cross-validations and compare and contrast with the result from the train-test-split case.
+Next, calculate the mean of the MSE over the 5 cross-validation and compare and contrast with the result from the train-test split case.
 
 
 ```python
@@ -221,4 +224,4 @@ cv_5_results
 
 ##  Summary 
 
-Congratulations! You now practiced your knowledge on k-fold crossvalidation!
+Congratulations! You are now familiar with cross-validation and know how to use `cross_val_score()`. Remember that the results obtained from cross-validation are robust and always use it whenever possible! 
