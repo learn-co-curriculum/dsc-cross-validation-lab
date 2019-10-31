@@ -10,12 +10,12 @@ In this lab, you'll be able to practice your cross-validation skills!
 
 You will be able to:
 
-- Compare the results with normal holdout validation
-- Apply 5-fold cross validation for regression
+- Perform cross validation on a model to determine optimal model performance
+- Compare training and testing errors to determine if model is over or underfitting
 
 ## Let's get started
 
-This time, let's only include the variables that were previously selected using recursive feature elimination. We included the code to preprocess below.
+This time, let's only include the variables that were previously selected using recursive feature elimination. We included the code to pre-process below.
 
 
 ```python
