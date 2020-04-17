@@ -15,7 +15,7 @@ You will be able to:
 
 ## Let's get started
 
-This time, let's only include the variables that were previously selected using recursive feature elimination. We included the code to pre-process below.
+We included the code to pre-process below.
 
 
 ```python
@@ -23,28 +23,34 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 %matplotlib inline
-from sklearn.datasets import load_boston
 
-boston = load_boston()
+ames = pd.read_csv('ames.csv')
 
-boston_features = pd.DataFrame(boston.data, columns = boston.feature_names)
-b = boston_features['B']
-logdis = np.log(boston_features['DIS'])
-loglstat = np.log(boston_features['LSTAT'])
+continuous = ['LotArea', '1stFlrSF', 'GrLivArea', 'SalePrice']
+categoricals = ['BldgType', 'KitchenQual', 'SaleType', 'MSZoning', 'Street', 'Neighborhood']
 
-# Min-Max scaling
-boston_features['B'] = (b-min(b))/(max(b)-min(b))
-boston_features['DIS'] = (logdis-min(logdis))/(max(logdis)-min(logdis))
+ames_cont = ames[continuous]
 
-# Standardization
-boston_features['LSTAT'] = (loglstat-np.mean(loglstat))/np.sqrt(np.var(loglstat))
-```
+# log features
+log_names = [f'{column}_log' for column in ames_cont.columns]
 
+ames_log = np.log(ames_cont)
+ames_log.columns = log_names
 
-```python
-X = boston_features[['CHAS', 'RM', 'DIS', 'B', 'LSTAT']]
-y = pd.DataFrame(boston.target, columns = ['target'])
-type(X)
+# normalize (subract mean and divide by std)
+
+def normalize(feature):
+    return (feature - feature.mean()) / feature.std()
+
+ames_log_norm = ames_log.apply(normalize)
+
+# one hot encode categoricals
+ames_ohe = pd.get_dummies(ames[categoricals], prefix=categoricals, drop_first=True)
+
+preprocessed = pd.concat([ames_log_norm, ames_ohe], axis=1)
+
+X = preprocessed.drop('SalePrice_log', axis=1)
+y = preprocessed['SalePrice_log']
 ```
 
 ### Train-test split
@@ -67,6 +73,7 @@ Perform a train-test split with a test set of 20%.
 ```python
 # A brief preview of train-test split
 print(len(X_train), len(X_test), len(y_train), len(y_test))
+
 ```
 
 ### Fit the model
@@ -75,7 +82,7 @@ Fit a linear regression model and apply the model to make predictions on test se
 
 
 ```python
-
+# Your code here
 ```
 
 ### Residuals and MSE
@@ -84,7 +91,7 @@ Calculate the residuals and the mean squared error on the test set
 
 
 ```python
-
+# Your code here
 ```
 
 ## Cross-Validation: let's build it from scratch!
@@ -103,17 +110,17 @@ def kfolds(data, k):
     return None
 ```
 
-### Apply it to the Boston Housing data
+### Apply it to the Ames Housing data
 
 
 ```python
 # Make sure to concatenate the data again
-bos_data = None
+ames_data = None
 ```
 
 
 ```python
-# Apply kfolds() to bos_data with 5 folds
+# Apply kfolds() to ames_data with 5 folds
 
 ```
 
@@ -145,14 +152,14 @@ This was a bit of work! Now, let's perform 5-fold cross-validation to get the me
 
 
 ```python
-
+# Your code here
 ```
 
 Next, calculate the mean of the MSE over the 5 cross-validation and compare and contrast with the result from the train-test split case.
 
 
 ```python
-
+# Your code here
 ```
 
 ##  Summary 
