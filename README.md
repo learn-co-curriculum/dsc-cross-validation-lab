@@ -15,7 +15,7 @@ You will be able to:
 
 ## Let's get started
 
-This time, let's only include the variables that were previously selected using recursive feature elimination. We included the code to pre-process below.
+We included the code to pre-process below.
 
 
 ```python
@@ -23,36 +23,35 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 %matplotlib inline
-from sklearn.datasets import load_boston
 
-boston = load_boston()
+ames = pd.read_csv('ames.csv')
 
-boston_features = pd.DataFrame(boston.data, columns = boston.feature_names)
-b = boston_features['B']
-logdis = np.log(boston_features['DIS'])
-loglstat = np.log(boston_features['LSTAT'])
+continuous = ['LotArea', '1stFlrSF', 'GrLivArea', 'SalePrice']
+categoricals = ['BldgType', 'KitchenQual', 'SaleType', 'MSZoning', 'Street', 'Neighborhood']
 
-# minmax scaling
-boston_features['B'] = (b-min(b))/(max(b)-min(b))
-boston_features['DIS'] = (logdis-min(logdis))/(max(logdis)-min(logdis))
+ames_cont = ames[continuous]
 
-#standardization
-boston_features['LSTAT'] = (loglstat-np.mean(loglstat))/np.sqrt(np.var(loglstat))
+# log features
+log_names = [f'{column}_log' for column in ames_cont.columns]
+
+ames_log = np.log(ames_cont)
+ames_log.columns = log_names
+
+# normalize (subract mean and divide by std)
+
+def normalize(feature):
+    return (feature - feature.mean()) / feature.std()
+
+ames_log_norm = ames_log.apply(normalize)
+
+# one hot encode categoricals
+ames_ohe = pd.get_dummies(ames[categoricals], prefix=categoricals, drop_first=True)
+
+preprocessed = pd.concat([ames_log_norm, ames_ohe], axis=1)
+
+X = preprocessed.drop('SalePrice_log', axis=1)
+y = preprocessed['SalePrice_log']
 ```
-
-
-```python
-X = boston_features[['CHAS', 'RM', 'DIS', 'B', 'LSTAT']]
-y = pd.DataFrame(boston.target, columns = ['target'])
-type(X)
-```
-
-
-
-
-    pandas.core.frame.DataFrame
-
-
 
 ### Train-test split
 
@@ -60,11 +59,13 @@ Perform a train-test split with a test set of 20%.
 
 
 ```python
+# Import train_test_split from sklearn.model_selection
 from sklearn.model_selection import train_test_split
 ```
 
 
 ```python
+# Split the data into training and test sets (assign 20% to test set)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
 ```
 
@@ -74,7 +75,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
 print(len(X_train), len(X_test), len(y_train), len(y_test))
 ```
 
-    404 102 404 102
+    1168 292 1168 292
 
 
 ### Fit the model
@@ -106,7 +107,7 @@ test_mse
 
 
 
-    24.136332754878
+    0.16462930868554446
 
 
 
@@ -142,16 +143,16 @@ def kfolds(data, k):
     return folds 
 ```
 
-### Apply it to the Boston Housing data
+### Apply it to the Ames Housing data
 
 
 ```python
-bos_data = pd.concat([X.reset_index(drop=True), y], axis=1)
+ames_data = pd.concat([X.reset_index(drop=True), y], axis=1)
 ```
 
 
 ```python
-bos_folds = kfolds(bos_data, 5)
+ames_folds = kfolds(ames_data, 5)
 ```
 
 ### Perform a linear regression for each fold and calculate the training and test error
@@ -166,33 +167,23 @@ k=5
 
 for n in range(k):
     # Split in train and test for the fold
-    train = pd.concat([fold for i, fold in enumerate(bos_folds) if i!=n])
-    test = bos_folds[n]
+    train = pd.concat([fold for i, fold in enumerate(ames_folds) if i!=n])
+    test = ames_folds[n]
     # Fit a linear regression model
-    linreg.fit(train[X.columns], train[y.columns])
+    linreg.fit(X_train, y_train)
     #Evaluate Train and Test Errors
-    y_hat_train = linreg.predict(train[X.columns])
-    y_hat_test = linreg.predict(test[X.columns])
-    train_residuals = y_hat_train - train[y.columns]
-    test_residuals = y_hat_test - test[y.columns]
+    y_hat_train = linreg.predict(X_train)
+    y_hat_test = linreg.predict(X_test)
+    train_residuals = y_hat_train - y_train
+    test_residuals = y_hat_test - y_test
     train_errs.append(np.mean(train_residuals.astype(float)**2))
     test_errs.append(np.mean(test_residuals.astype(float)**2))
 print(train_errs)
 print(test_errs)
 ```
 
-    [target    24.195577
-    dtype: float64, target    23.032087
-    dtype: float64, target    19.745073
-    dtype: float64, target    15.317101
-    dtype: float64, target    22.329973
-    dtype: float64]
-    [target    13.405145
-    dtype: float64, target    17.444017
-    dtype: float64, target    37.032711
-    dtype: float64, target    58.279544
-    dtype: float64, target    26.097989
-    dtype: float64]
+    [0.16204746782850243, 0.16204746782850243, 0.16204746782850243, 0.16204746782850243, 0.16204746782850243]
+    [0.16462930868554448, 0.16462930868554448, 0.16462930868554448, 0.16462930868554448, 0.16462930868554448]
 
 
 ## Cross-Validation using Scikit-Learn
@@ -201,24 +192,25 @@ This was a bit of work! Now, let's perform 5-fold cross-validation to get the me
 
 
 ```python
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, make_scorer
 from sklearn.model_selection import cross_val_score
 
-cv_5_results = cross_val_score(linreg, X, y, cv=5, scoring='neg_mean_squared_error')
+mse = make_scorer(mean_squared_error)
+
+cv_5_results = cross_val_score(linreg, X, y, cv=5, scoring=mse)
 ```
 
 Next, calculate the mean of the MSE over the 5 cross-validation and compare and contrast with the result from the train-test split case.
 
 
 ```python
-cv_5_results
+cv_5_results.mean()
 ```
 
 
 
 
-    array([-13.40514492, -17.4440168 , -37.03271139, -58.27954385,
-           -26.09798876])
+    0.17702834210001087
 
 
 
