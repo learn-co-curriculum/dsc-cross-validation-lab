@@ -1,4 +1,3 @@
-
 # Introduction to Cross-Validation - Lab
 
 ## Introduction
@@ -10,12 +9,12 @@ In this lab, you'll be able to practice your cross-validation skills!
 
 You will be able to:
 
-- Perform cross validation on a model to determine optimal model performance
-- Compare training and testing errors to determine if model is over or underfitting
+- Perform cross validation on a model
+- Compare and contrast model validation strategies
 
-## Let's get started
+## Let's Get Started
 
-We included the code to pre-process below.
+We included the code to pre-process the Ames Housing dataset below. This is done for the sake of expediency, although it may result in data leakage and therefore overly optimistic model metrics.
 
 
 ```python
@@ -53,9 +52,9 @@ X = preprocessed.drop('SalePrice_log', axis=1)
 y = preprocessed['SalePrice_log']
 ```
 
-### Train-test split
+## Train-Test Split
 
-Perform a train-test split with a test set of 20%.
+Perform a train-test split with a test set of 20% and a random state of 4.
 
 
 ```python
@@ -69,54 +68,112 @@ Perform a train-test split with a test set of 20%.
 
 ```
 
+### Fit a Model
 
-```python
-# A brief preview of train-test split
-print(len(X_train), len(X_test), len(y_train), len(y_test))
-
-```
-
-### Fit the model
-
-Fit a linear regression model and apply the model to make predictions on test set
+Fit a linear regression model on the training set
 
 
 ```python
-# Your code here
+# Import LinearRegression from sklearn.linear_model
+
 ```
-
-### Residuals and MSE
-
-Calculate the residuals and the mean squared error on the test set
 
 
 ```python
-# Your code here
+# Instantiate and fit a linear regression model
+
 ```
 
-## Cross-Validation: let's build it from scratch!
+### Calculate MSE
 
-### Create a cross-validation function
+Calculate the mean squared error on the test set
 
-Write a function `kfolds()` that splits a dataset into k evenly sized pieces. If the full dataset is not divisible by k, make the first few folds one larger then later ones.
 
-We want the folds to be a list of subsets of data!
+```python
+# Import mean_squared_error from sklearn.metrics
+
+```
+
+
+```python
+# Calculate MSE on test set
+
+```
+
+## Cross-Validation using Scikit-Learn
+
+Now let's compare that single test MSE to a cross-validated test MSE.
+
+
+```python
+# Import cross_val_score from sklearn.model_selection
+
+```
+
+
+```python
+# Find MSE scores for a 5-fold cross-validation
+
+```
+
+
+```python
+# Get the average MSE score
+
+```
+
+Compare and contrast the results. What is the difference between the train-test split and cross-validation results? Do you "trust" one more than the other?
+
+
+```python
+# Your answer here
+
+```
+
+## Level Up: Let's Build It from Scratch!
+
+### Create a Cross-Validation Function
+
+Write a function `kfolds(data, k)` that splits a dataset into `k` evenly sized pieces. If the full dataset is not divisible by `k`, make the first few folds one larger then later ones.
+
+For example, if you had this dataset:
+
+
+```python
+example_data = pd.DataFrame({
+    "color": ["red", "orange", "yellow", "green", "blue", "indigo", "violet"]
+})
+example_data
+```
+
+`kfolds(example_data, 3)` should return:
+
+* a dataframe with `red`, `orange`, `yellow`
+* a dataframe with `green`, `blue`
+* a dataframe with `indigo`, `violet`
+
+Because the example dataframe has 7 records, which is not evenly divisible by 3, so the "leftover" 1 record extends the length of the first dataframe.
 
 
 ```python
 def kfolds(data, k):
-    # Force data as pandas DataFrame
-    # add 1 to fold size to account for leftovers           
-    return None
+    folds = []
+    
+    # Your code here
+    
+    return folds
 ```
-
-### Apply it to the Ames Housing data
 
 
 ```python
-# Make sure to concatenate the data again
-ames_data = None
+results = kfolds(example_data, 3)
+for result in results:
+    print(result, "\n")
 ```
+
+### Apply Your Function to the Ames Housing Data
+
+Get folds for both `X` and `y`.
 
 
 ```python
@@ -124,44 +181,42 @@ ames_data = None
 
 ```
 
-### Perform a linear regression for each fold and calculate the training and test error
+### Perform a Linear Regression for Each Fold and Calculate the Test Error
 
-Perform linear regression on each and calculate the training and test error: 
+Remember that for each fold you will need to concatenate all but one of the folds to represent the training data, while the one remaining fold represents the test data.
 
 
 ```python
+# Replace None with appropriate code
 test_errs = []
-train_errs = []
-k=5
+k = 5
 
 for n in range(k):
-    # Split in train and test for the fold
-    train = None
-    test = None
-    # Fit a linear regression model
+    # Split into train and test for the fold
+    X_train = None
+    X_test = None
+    y_train = None
+    y_test = None
     
-    # Evaluate Train and Test errors
+    # Fit a linear regression model
+    None
+    
+    # Evaluate test errors
+    None
 
-# print(train_errs)
-# print(test_errs)
+print(test_errs)
 ```
 
-## Cross-Validation using Scikit-Learn
-
-This was a bit of work! Now, let's perform 5-fold cross-validation to get the mean squared error through scikit-learn. Let's have a look at the five individual MSEs and explain what's going on.
+If your code was written correctly, these should be the same errors as scikit-learn produced with `cross_val_score` (within rounding error). Test this out below:
 
 
 ```python
-# Your code here
+# Compare your results with sklearn results
+
 ```
 
-Next, calculate the mean of the MSE over the 5 cross-validation and compare and contrast with the result from the train-test split case.
-
-
-```python
-# Your code here
-```
+This was a bit of work! Hopefully you have a clearer understanding of the underlying logic for cross-validation if you attempted this exercise.
 
 ##  Summary 
 
-Congratulations! You are now familiar with cross-validation and know how to use `cross_val_score()`. Remember that the results obtained from cross-validation are robust and always use it whenever possible! 
+Congratulations! You are now familiar with cross-validation and know how to use `cross_val_score()`. Remember that the results obtained from cross-validation are more robust than train-test split.
